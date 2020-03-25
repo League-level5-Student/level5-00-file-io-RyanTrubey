@@ -2,11 +2,15 @@ package _03_To_Do_List;
 
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.io.BufferedReader;
+import java.io.FileNotFoundException;
+import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.util.ArrayList;
 
 import javax.swing.JButton;
+import javax.swing.JFileChooser;
 import javax.swing.JFrame;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
@@ -43,7 +47,9 @@ public class ToDoList implements ActionListener {
 	JButton load = new JButton("load list");
 	
 	public static void main(String[] args) {
-		
+		ToDoList tdl = new ToDoList();
+		tdl.loadLastList();
+		tdl.display();
 	}
 	
 	public void display() {
@@ -58,14 +64,32 @@ public class ToDoList implements ActionListener {
 		panel.add(save);
 		panel.add(load);
 		frame.add(panel);
+		frame.setVisible(true);
 		frame.pack();
+	}
+	
+	public void loadLastList() {
+		try {
+			BufferedReader br = new BufferedReader(new FileReader("/Users/ryantrubey/Desktop/taskList.txt"));
+			String line = br.readLine();
+			while(line != null){
+				taskList.add(line);
+				line = br.readLine();
+			}
+		} catch (FileNotFoundException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
 	}
 
 	@Override
 	public void actionPerformed(ActionEvent e) {
 		// TODO Auto-generated method stub
 		if(e.getSource() == add) {
-			String newtask = JOptionPane.showInputDialog("enter a task");
+			String newtask = JOptionPane.showInputDialog("Enter a task.");
 			taskList.add(newtask);
 		}
 		if(e.getSource() == view) {
@@ -77,15 +101,53 @@ public class ToDoList implements ActionListener {
 			JOptionPane.showMessageDialog(null, temp);
 		}
 		if(e.getSource() == remove) {
-			String remove = JOptionPane.showInputDialog("Which item should be removed?");
+			String remove = JOptionPane.showInputDialog("Which task should be removed?");
+			int index = -1;
 			for(int i = 0; i < taskList.size(); i++) {
 				if(taskList.get(i).equalsIgnoreCase(remove)) {
-					taskList.remove(i);
+					index = i;
 				}
+			}
+			if(index >= 0) {
+				JOptionPane.showMessageDialog(null, taskList.get(index) + " has been removed.");
+				taskList.remove(index);
+			} else {
+				JOptionPane.showMessageDialog(null, "There is no task called " + remove + " in the list.");
 			}
 		}
 		if(e.getSource() == save) {
-			
+			try {
+				FileWriter fw = new FileWriter("/Users/ryantrubey/Desktop/taskList.txt");
+				fw.write(taskList.get(0) + "\n");
+				for(int i = 1; i < taskList.size(); i++) {
+					fw.append(taskList.get(i) + "\n");
+				}
+				fw.close();
+			} catch (IOException e1) {
+				// TODO Auto-generated catch block
+				e1.printStackTrace();
+			}
+		}
+		if(e.getSource() == load) {
+			taskList.clear();
+			JFileChooser jfc = new JFileChooser();
+			int returnVal = jfc.showOpenDialog(null);
+			if(returnVal == JFileChooser.APPROVE_OPTION) {
+				try {
+					BufferedReader br = new BufferedReader(new FileReader(jfc.getSelectedFile().getAbsolutePath()));
+					String line = br.readLine();
+					while(line != null){
+						taskList.add(line);
+						line = br.readLine();
+					}
+				} catch (FileNotFoundException e1) {
+					// TODO Auto-generated catch block
+					e1.printStackTrace();
+				} catch (IOException e1) {
+					// TODO Auto-generated catch block
+					e1.printStackTrace();
+				}
+			}
 		}
 	}
 }
